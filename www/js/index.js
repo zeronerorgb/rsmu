@@ -671,13 +671,14 @@ var initPage = function (page) {
 	else if (page.id === 'full') {
 
 		page.querySelector('ons-toolbar .right').style.display = 'block';
-		page.querySelector('ons-toolbar .right ons-icon').onclick = (function (page) {
-
-			return function () {
-				fn.pushPage('add', page.data.info);
-			};
-
-		})(page);
+		if (page.querySelector('ons-toolbar .right ons-icon') !== null)
+			page.querySelector('ons-toolbar .right ons-icon').onclick = (function (page) {
+	
+				return function () {
+					fn.pushPage('add', page.data.info);
+				};
+	
+			})(page);
 
 		switch (page.data.title) {
 			// case 'news':
