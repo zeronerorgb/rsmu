@@ -1,0 +1,706 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="utf-8" />
+	<meta name="apple-mobile-web-app-capable" content="yes" />
+	<meta name="mobile-web-app-capable" content="yes" />
+	<title>RSMU</title>
+
+	<!-- JS dependencies -->
+	<script src="lib/onsen/js/onsenui.js"></script>
+
+	<!-- CSS dependencies -->
+	<link rel="stylesheet" href="lib/onsen/css/onsenui.css">
+	<link rel="stylesheet" href="lib/onsen/css/onsen-css-components.css">
+	<link rel="stylesheet" href="css/style.css">
+
+	<!-- App init -->
+	<script src="js/app.js"></script>
+	<script src="js/jquery.js"></script>
+	<script src="js/jquery-ui.js"></script>
+	<script src="js/pathfinding-browser.min.js"></script>
+	<script src="js/async.js"></script>
+	<script src="js/index.js"></script>
+	<script src="js/index-map.js"></script>
+
+	<style>
+		
+		BODY {
+			margin: 0;
+			padding: 0;
+		}
+
+		#load_map {
+			position: absolute;
+			top: 10px;
+			right: 10px;
+			color: white;
+			background-color: rgba(0,0,0,0.5);
+			z-index: 99;
+			padding: 5px;
+			font-family: Arial;
+			display: none;
+		}
+		
+	</style>
+
+</head>
+<body>
+
+	<ons-navigator id="mainNav" page="load.html" animation="slide"></ons-navigator>
+
+	<ons-template id="load.html">
+		<ons-page id = "load">
+			<div style="margin: 30% auto; width: 320px;">
+				<div style="width:250px; height:250px; margin: auto; background-color: transparent; background-size: cover; background-image: url(img/logo.png);"></div>
+				<ons-progress-bar value="20" secondary-value="50" indeterminate></ons-progress-bar>
+			</div>
+		</ons-page>
+	</ons-template>
+
+	<ons-template id="main.html">
+		<ons-page id = "main">
+			<ons-splitter>
+				<ons-splitter-side id="menu-left" side="left" width="250px" collapse swipeable> <!--collapse-->
+					<ons-page>
+						<div style="width:150px; height:150px; margin: auto; background-color: transparent; background-size: cover; background-image: url(img/logo.png);"></div>
+						<ons-list style="font-size: 16px;">
+							<ons-list-item onclick="fn.loadPage('news.html')" tappable>
+								Новости
+							</ons-list-item>
+							<ons-list-item onclick="fn.loadPage('anons.html')" tappable>
+								Анонсы
+							</ons-list-item>
+							<ons-list-item onclick="fn.loadPage('rasp.html')" tappable>
+								Расписание
+							</ons-list-item>
+							<ons-list-item onclick="fn.loadPage('klin.html')" tappable>
+								Клинические базы
+							</ons-list-item>
+							<ons-list-item onclick="fn.loadPage('faq.html')" tappable>
+								Факультеты
+							</ons-list-item>
+							<ons-list-item onclick="fn.loadPage('kont.html')" tappable>
+								Контакты
+							</ons-list-item>
+							<ons-list-item onclick="fn.loadPage('map.html')" tappable>
+								Карты
+							</ons-list-item>
+						</ons-list>
+					</ons-page>
+				</ons-splitter-side>
+				<ons-splitter-side id="menu-right" side="right" width="250px" collapse>
+					<ons-page>
+						<ons-navigator id="menuNav" page="menu-right-map.html" animation="none"></ons-navigator>
+					</ons-page>
+				</ons-splitter-side>
+
+				<ons-splitter-content id="content" page="news.html"></ons-splitter-content>
+
+			</ons-splitter>
+		</ons-page>
+	</ons-template>
+	
+	<ons-template id="menu-right-map.html">
+		<ons-page id="menu-right-map">
+			<div style="text-align: center; margin-top: 100px;">
+				<p>
+					<ons-input id="username" modifier="underbar" placeholder="From" float></ons-input>
+				</p>
+				<p>
+					<ons-input id="password" modifier="underbar" placeholder="To" float></ons-input>
+				</p>
+				<p style="margin-top: 30px;">
+					<ons-button>Добавить</ons-button>
+				</p>
+			</div>
+		</ons-page>
+	</ons-template>
+	
+	<ons-template id="menu-right-group.html">
+		<ons-page id="menu-right-group">
+			<div style="text-align: center; margin-top: 100px;">
+				<p>
+					<ons-input id="Group" modifier="underbar" placeholder="Группа" float></ons-input>
+				</p>
+				 <p>
+					<ons-input id="Fak" modifier="underbar" placeholder="Факультет" float></ons-input>
+				</p>
+				<p style="margin-top: 30px;">
+					<ons-button>Добавить</ons-button>
+				</p>
+			</div>
+		</ons-page>
+	</ons-template>
+		
+	<ons-template id="menu-right-klin.html">
+		<ons-page id="menu-right-klin">
+			<ons-list>
+				<div class="loader">Loading...</div>
+			</ons-list>
+
+
+			<!-- <ons-button style="margin: 200px auto 0 auto; display: block; width: 100px;" onclick="fn.pushPage('add', {table: 'klin'})">Добавить</ons-button> -->
+		</ons-page>
+	</ons-template>
+
+	<ons-template id="news.html">
+		<ons-page id="news">
+			<ons-toolbar modifier="material--flat">
+				<div class="left">
+					<ons-toolbar-button onclick="fn.openLeft()" modifier="material--flat">
+						<ons-icon icon="md-menu" style="color: #009688;"></ons-icosn>
+					</ons-toolbar-button>
+				</div>
+				<div class="center">
+					Новости
+				</div>
+			</ons-toolbar>
+			<ons-list>
+				<div class="loader">Loading...</div>
+			</ons-list>
+		</ons-page>
+	</ons-template>
+		
+	<ons-template id="anons.html">
+		<ons-page id="anons">
+			<ons-toolbar modifier="material--flat">
+				<div class="left">
+					<ons-toolbar-button onclick="fn.openLeft()" modifier="material--flat">
+						<ons-icon icon="md-menu" style="color: #009688;"></ons-icosn>
+					</ons-toolbar-button>
+				</div>
+				<div class="center">
+					Анонсы
+				</div>
+			</ons-toolbar>
+			<ons-list>
+				<div class="loader">Loading...</div>
+			</ons-list>
+		</ons-page>
+	</ons-template>
+	
+	<ons-template id="klin.html">
+		<ons-page id="klin">
+			<ons-toolbar modifier="material--flat">
+				<div class="left">
+					<ons-toolbar-button onclick="fn.openLeft()" modifier="material--flat">
+						<ons-icon icon="md-menu" style="color: #009688;"></ons-icosn>
+					</ons-toolbar-button>
+				</div>
+				<div class="center">
+					Клинических базы
+				</div>
+			</ons-toolbar>
+
+			<div id="google" style="width: 100%; height: 100%;">123123123</div>
+			
+			<ons-fab position="bottom right" onclick="fn.openRightKlin()">
+					<ons-icon icon="fa-flag-o" modifier="material--flat"></ons-icon>
+			</ons-fab>
+		</ons-page>
+	</ons-template>
+		
+	<ons-template id="map.html">
+		<ons-page>
+			
+			<ons-navigator id="nav" page="main_map.html"></ons-navigator>
+
+		</ons-page>
+	</ons-template>
+		
+	<ons-template id="full.html">
+		<ons-page id="full">
+			<ons-toolbar modifier="material--flat">
+				<div class="left">
+					<ons-back-button modifier="material--flat" style="color: #009688;">
+						<!-- <ons-icon icon="md-menu" style="color: #009688;"></ons-icosn> -->
+					</ons-back-button>
+				</div>
+				<div class="center">
+					
+				</div>
+				<div class="right">
+					<!-- <ons-button modifier="material--flat" onclick="">
+						<ons-icon icon="md-plus" style="font-size: 20px;"></ons-icon>
+					</ons-button> -->
+				</div>
+			</ons-toolbar>
+			<ons-navigator id="fullNav"></ons-navigator>
+		</ons-page>
+	</ons-template>
+	
+	<ons-template id="full-news.html">
+		<ons-page id="full-news">
+			Текст новости 
+		</ons-page>
+	</ons-template>
+	
+	<ons-template id="full-anons.html">
+		<ons-page id="full-anons">
+			Текст анонса 
+		</ons-page>
+	</ons-template>
+	
+	<ons-template id="full-rasp.html">
+		<ons-page id="full-rasp">
+
+			<ons-tabbar modifier="material--flat">
+				<ons-tab label="чс" page="full-rasp-cs.html" active modifier="material--flat"></ons-tab>
+				<ons-tab label="зн" page="full-rasp-zn.html" modifier="material--flat"></ons-tab>
+			</ons-tabbar>
+
+		</ons-page>
+	</ons-template>
+
+	<ons-template id="full-rasp-cs.html">
+		<ons-page id="full-rasp-cs">
+			<ons-list>
+				<div class="loader">Loading...</div>
+			</ons-list>
+		</ons-page>
+	</ons-template>
+
+	<ons-template id="full-rasp-zn.html">
+		<ons-page id="full-rasp-zn">
+			<ons-list>
+				<div class="loader">Loading...</div>
+			</ons-list>
+		</ons-page>
+	</ons-template>
+
+	<ons-template id="full-rasp-add.html">
+		<ons-page id="full-rasp-add">
+			рапсиание добавить
+		</ons-page>
+	</ons-template>
+	
+	<ons-template id="full-kont.html">
+		<ons-page id="full-kont">
+			<ons-list>
+				<div class="loader">Loading...</div>
+			</ons-list>
+		</ons-page>
+	</ons-template>
+	
+	<ons-template id="full-faq.html">
+		<ons-page id="full-faq">
+			<ons-list>
+				<div class="loader">Loading...</div>
+			</ons-list>
+		</ons-page>
+	</ons-template>
+	
+	<ons-template id="rasp.html">
+		<ons-page id="rasp">
+			<ons-toolbar modifier="material--flat">
+				<div class="left">
+					<ons-toolbar-button onclick="fn.openLeft()" modifier="material--flat">
+						<ons-icon icon="md-menu" style="color: #009688;"></ons-icosn>
+					</ons-toolbar-button>
+				</div>
+				<div class="center">Расписание</div>
+				<div class="right">
+					<!-- <ons-button modifier="material--flat">
+						<ons-icon icon="md-plus" style="font-size: 20px;" onclick="fn.pushPage('add', {table: 'rasp'})"></ons-icon>
+					</ons-button> -->
+				</div>
+			</ons-toolbar>
+	
+			<ons-list>
+				<div class="loader">Loading...</div>
+			</ons-list>
+			
+		</ons-page>
+	</ons-template>
+
+		<ons-template id="full-add.html">
+			<ons-page id="full-add">
+		
+				<ons-list id="info">
+
+					<div class="loader">Loading...</div>
+
+				</ons-list>
+
+				<ons-list style="margin-top: 20px;" id="form">
+
+					<div class="loader">Loading...</div>
+
+				</ons-list>
+
+				<ons-button id="send" style="margin: 20px auto 0 auto; display: block; width: 100px;">Добавить</ons-button>
+				
+			</ons-page>
+		</ons-template>
+	
+	<ons-template id="kont.html">
+		<ons-page id="kont">
+			
+			<ons-toolbar modifier="material--flat">
+				<div class="left">
+					<ons-toolbar-button onclick="fn.openLeft()" modifier="material--flat">
+						<ons-icon icon="md-menu" style="color: #009688;"></ons-icosn>
+					</ons-toolbar-button>
+				</div>
+				<div class="center">Контакты</div>
+				<div class="right">
+					<!-- <ons-button modifier="material--flat">
+						<ons-icon icon="md-plus" style="font-size: 20px;" onclick="fn.pushPage('add', {table: 'kont'})"></ons-icon>
+					</ons-button> -->
+				</div>
+			</ons-toolbar>
+	
+			<ons-list>
+				<div class="loader">Loading...</div>
+			</ons-list>
+			
+		</ons-page>
+	</ons-template>
+	
+	<ons-template id="faq.html">
+		<ons-page id="faq">
+			
+			<ons-toolbar modifier="material--flat">
+				<div class="left">
+					<ons-toolbar-button onclick="fn.openLeft()" modifier="material--flat">
+						<ons-icon icon="md-menu" style="color: #009688;"></ons-icosn>
+					</ons-toolbar-button>
+				</div>
+				<div class="center">Факультеты</div>
+				<div class="right">
+					<!-- <ons-button modifier="material--flat">
+						<ons-icon icon="md-plus" style="font-size: 20px;" onclick="fn.pushPage('add', {table: 'faq'})"></ons-icon>
+					</ons-button> -->
+				</div>
+			</ons-toolbar>
+	
+			<ons-list>
+				<div class="loader">Loading...</div>
+			</ons-list>
+			
+		</ons-page>
+	</ons-template>
+
+	<iframe id="docum" src="http://rsmu.ru" style="z-index: 100; position: absolute; width: 100%; height: 200px; display: none;">
+	   Ваш браузер не поддерживает плавающие фреймы!
+	</iframe>
+
+	<!-- /////////////////// КАРТА /////////////// -->
+
+	<ons-template id="main_map.html">
+		<ons-page id="main">
+			
+				<ons-splitter>
+					<ons-splitter-side id="menu" side="right" width="220px" collapse> <!-- swipeable -->
+						<ons-navigator id="myNav" page="form.html"></ons-navigator>
+						<!-- <ons-page id="form">
+
+							<div style="margin-top: 45%;">
+								<ons-list>
+									<ons-list-item>
+										<p>
+											<ons-input id="from" modifier="underbar" placeholder="From" float></ons-input>
+										</p>
+										<p>
+											<ons-input id="to" modifier="underbar" type="password" placeholder="To" float></ons-input>
+										</p>
+									</ons-list-item>
+								</ons-list>
+							</div>
+							<div style="margin-top: 80%; text-align: center;">
+								<ons-button modifier="quiet">Add place</ons-button>
+							</div>
+						</ons-page> -->
+					</ons-splitter-side>
+					<ons-splitter-content id="content" page="home.html"></ons-splitter-content>
+				</ons-splitter>
+
+		</ons-page>
+	</ons-template>
+
+	<ons-template id="home.html">
+		<ons-page id="maps">
+			<ons-tabbar modifier="material--flat">
+				<ons-tab label="1" page="floor1.html" active modifier="material--flat"></ons-tab>
+				<ons-tab label="2" page="floor2.html" modifier="material--flat"></ons-tab>
+				<ons-tab label="3" page="floor3.html" modifier="material--flat"></ons-tab>
+				<ons-tab label="4" page="floor4.html" modifier="material--flat"></ons-tab>
+			</ons-tabbar>
+		</ons-page>
+	</ons-template>
+
+	<ons-template id="floor1.html">
+		<ons-page id="floor1">
+			<div id="can"></div>
+			<ons-speed-dial position="bottom right" direction="up">
+				<ons-icon icon="ion-paper-airplane" size="32px" style="color: green" onclick="fn.rightSlide()"></ons-icon>
+			</ons-speed-dial>
+		</ons-page>
+	</ons-template>
+
+	<ons-template id="floor2.html">
+		<ons-page id="floor2">
+			<div id="can"></div>
+			<ons-speed-dial position="bottom right" direction="up">
+				<ons-icon icon="ion-paper-airplane" size="32px" style="color: green" onclick="fn.rightSlide()"></ons-icon>
+			</ons-speed-dial>
+		</ons-page>
+	</ons-template>
+
+	<ons-template id="floor3.html">
+		<ons-page id="floor3">
+			<div id="can"></div>
+			<ons-speed-dial position="bottom right" direction="up">
+				<ons-icon icon="ion-paper-airplane" size="32px" style="color: green" onclick="fn.rightSlide()"></ons-icon>
+			</ons-speed-dial>
+		</ons-page>
+	</ons-template>
+
+	<ons-template id="floor4.html">
+		<ons-page id="floor4">
+			<div id="can"></div>
+			<ons-speed-dial position="bottom right" direction="up">
+				<ons-icon icon="ion-paper-airplane" size="32px" style="color: green" onclick="fn.rightSlide()"></ons-icon>
+			</ons-speed-dial>
+		</ons-page>
+	</ons-template>
+
+	<ons-template id="form.html">
+		<ons-page id="form">
+
+			<div style="margin-top: 45%;">
+				<ons-list>
+					<ons-list-item>
+						<div class = "left">
+							<ons-button modifier="quiet" onclick="fn.load('nav', 'search.html', {data: {type: 'from'}})">Откуда</ons-button>
+						</div>
+						<div class = "right">
+							 <span class="from"></span>
+						</div>
+					</ons-list-item>
+					<ons-list-item>
+						<div class = "left">
+							<ons-button modifier="quiet" onclick="fn.load('nav', 'search.html', {data: {type: 'to'}})">Куда</ons-button>
+						</div>
+						<div class = "right">
+							<span class="to"></span>
+						</div>
+					</ons-list-item>
+				</ons-list>
+			</div>
+			<!-- <div style="margin-top: 80%; text-align: center;">
+				<ons-button modifier="quiet" onclick="fn.load('nav', 'option.html')">Настройка точек</ons-button>
+			</div>
+			<div style="text-align: center;">
+				<ons-button modifier="quiet" onclick="fn.load('nav', 'maplist.html')">Настройки карты</ons-button>
+			</div> -->
+		</ons-page>
+	</ons-template>
+
+	<ons-template id="option.html">
+		<ons-page id="option">
+
+			<ons-toolbar modifier="material--flat">
+				<div class="left">
+					<!-- <ons-icon icon="ion-chevron-left" style="margin-left: 10px;" id="back"></ons-icon> -->
+					<ons-back-button modifier="material--flat" style="cursor: pointer;"></ons-back-button>
+				</div>
+				<div class="center">
+					Настройка точек
+				</div>
+			</ons-toolbar>
+
+			<div style="margin: 20px 0 20px 0; text-align: center;">
+				<ons-button modifier="quiet" onclick="fn.canvasPoint()">Добавить</ons-button>
+			</div>
+
+			<ons-list>
+
+			</ons-list>
+		</ons-page>
+	</ons-template>
+
+	<ons-template id="maplist.html">
+		<ons-page id="maplist">
+
+			<ons-toolbar modifier="material--flat">
+				<div class="left">
+					<!-- <ons-icon icon="ion-chevron-left" style="margin-left: 10px;" id="back"></ons-icon> -->
+					<ons-back-button modifier="material--flat" style="cursor: pointer;"></ons-back-button>
+				</div>
+				<div class="center">
+					Настройки карты
+				</div>
+			</ons-toolbar>
+
+			<div id="maplist">
+				
+				<!-- <div style="margin: 20px 0 20px 0; text-align: center;">
+					<img style="width: 100%">
+				</div> -->
+				
+			</div>
+
+
+			
+		</ons-page>
+	</ons-template>
+
+	<ons-template id="search.html">
+		<ons-page id="search">
+
+			<ons-toolbar modifier="material--flat">
+				<div class="left">
+					<!-- <ons-icon icon="ion-chevron-left" style="margin-left: 10px;" id="back"></ons-icon> -->
+					<ons-back-button modifier="material--flat" style="cursor: pointer;"></ons-back-button>
+				</div>
+				<div class="center">
+					Поиск точек
+				</div>
+			</ons-toolbar>
+
+			<div style="margin: 20px 0 20px 0; text-align: center;">
+				<ons-input id="search" modifier="underbar" placeholder="search..." float></ons-input>
+			</div>
+
+			<ons-list>
+
+			</ons-list>
+		</ons-page>
+	</ons-template>
+
+	<ons-template id="add.html">
+		<ons-page id="add">
+
+			<ons-toolbar modifier="material--flat">
+				<div class="left">
+					<!-- <ons-icon icon="ion-chevron-left" style="margin-left: 10px;" id="back"></ons-icon> -->
+					<ons-back-button modifier="material--flat" style="cursor: pointer;"></ons-back-button>
+				</div>
+				<div class="center">
+					Настройка точек
+				</div>
+			</ons-toolbar>
+
+			<ons-list> 
+				<ons-list-item>
+					<ons-input id="name" modifier="underbar" placeholder="name" float></ons-input>
+				</ons-list-item>
+				<ons-list-header>Тип точки</ons-list-header>
+				<ons-list-item >
+					<label class="left">
+						<ons-input name="type" type="radio" input-id="radio-1" id="office" checked></ons-input>
+					</label>
+					<label for="radio-1" class="center">
+						кабинет
+					</label>
+				</ons-list-item>
+				<ons-list-item >
+					<label class="left">
+						<ons-input name="type" type="radio" input-id="radio-1" id="stairway"></ons-input>
+					</label>
+					<label for="radio-2" class="center">
+						лестница
+					</label>
+				</ons-list-item>
+				<ons-list-header class="floor">Floors</ons-list-header>
+				<ons-list-item tappable class="floor">
+					<label class="left">
+						<ons-input type="checkbox" input-id="check-1" id="check-1"></ons-input>
+					</label>
+					<label for="check-1" class="center">
+						1 этаж
+					</label>
+				</ons-list-item>
+				<ons-list-item  class="floor">
+					<label class="left">
+						<ons-input type="checkbox" input-id="check-2" id="check-2"></ons-input>
+					</label>
+					<label for="check-2" class="center">
+						2 этаж
+					</label>
+				</ons-list-item>
+				<ons-list-item  class="floor">
+					<label class="left">
+						<ons-input type="checkbox" input-id="check-3" id="check-3"></ons-input>
+					</label>
+					<label for="check-3" class="center">
+						3 этаж
+					</label>
+				</ons-list-item>
+				<ons-list-item  class="floor">
+					<label class="left">
+						<ons-input type="checkbox" input-id="check-4" id="check-4"></ons-input>
+					</label>
+					<label for="check-4" class="center">
+						4 этаж
+					</label>
+				</ons-list-item>
+				
+				<ons-list-header>информация о точке</ons-list-header>
+				<ons-list-item >
+					<label class="left">
+						<ons-input type="checkbox" input-id="check-3" id="index"></ons-input>
+					</label>
+					<label for="radio-2" class="center">
+						использовать
+					</label>
+				</ons-list-item>
+				<ons-list-item class="info">
+					<img src="img/noimage.jpg" alt="" id="img" style="max-width: 80%;">
+				</ons-list-item>
+				<ons-list-item class="info">
+					<textarea id="info" class="textarea" ng-model="text2" placeholder="information" style="width: 90%; height: 100px; border-radius: 0;" onfocus="this.style.borderColor = '#009688'" onblur="this.style.borderColor = '#cccccc'"></textarea>
+				</ons-list-item>
+			</ons-list>
+
+			<div style="margin: 20px 0 20px 0; text-align: center;" class="change">
+				<ons-button modifier="quiet" id="change">изменить позицию точки</ons-button>
+			</div>
+
+			<div style="margin: 20px 0 20px 0; text-align: center;">
+				<ons-button modifier="quiet" id="send">добавить точку</ons-button>
+			</div>
+
+		</ons-page>
+	</ons-template>
+
+	<ons-template id="info.html">
+		<ons-page id="info">
+
+			<ons-toolbar modifier="material--flat">
+				<div class="left">
+					<ons-back-button modifier="material--flat" style="cursor: pointer;"></ons-back-button>
+				</div>
+				<div class="center">
+					Информация о точке
+				</div>
+			</ons-toolbar>
+
+			<p style="text-align: center;" id="name">
+				<!-- <span id="name"></span> -->
+			</p>
+			<p style="text-align: center;">
+				<img src="img/noimage.jpg" alt="" style="max-width: 80%; display: inline;" id="img">
+			</p>
+			<p style="padding: 15px;" id="info">
+				<!-- <span id="info"></span> -->
+			</p>
+		</ons-page>
+	</ons-template>
+
+	<ons-modal id="modal">
+		<ons-icon icon="ion-load-c" spin="true"></ons-icon>
+		<br>
+		<br> Please wait.
+		<br><span id="first"></span>
+		<br><span id="second"></span>
+	</ons-modal>
+
+	<span id="load_map"><ons-icon icon="ion-load-c" spin="true"></ons-icon> Loading</span>
+	
+	<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAKbkVLF-IxKcMfW12nZSVSAtFGYLoiInQ" async defer></script>
+	
+</body>
+</html>
